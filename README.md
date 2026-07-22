@@ -46,7 +46,7 @@ migration step in CI.
 
 | Variable | Required for | Notes |
 |---|---|---|
-| `DATABASE_URL` | Everything | A Postgres connection string. Use the **direct** (non-pooled) connection string — `@prisma/adapter-pg` manages its own pool |
+| `DATABASE_URL` | Everything | A Postgres connection string. On Supabase specifically, use the **Transaction pooler** string (port 6543) when deploying to Vercel — Supabase's direct connection is IPv6-only, which Vercel's serverless functions can't reach. Other providers' direct connection strings work fine. |
 | `ANTHROPIC_API_KEY` | Synthesis (Explore, refresh job) | Get one at console.anthropic.com. Without it, `/explore`'s "Research this" and the refresh job will fail — browsing the feed/saved/themes still works against seeded/existing data |
 | `FIRECRAWL_API_KEY` | Real source scraping | Without it, synthesis still runs but with no sources — Claude writes from general knowledge and is prompted to hedge accordingly. Get one at firecrawl.dev |
 | `CRON_SECRET` | The refresh endpoint | Shared secret required to call `/api/cron/refresh` |
