@@ -1,0 +1,126 @@
+// Nodalis data model
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// A trend indicator for a Story, computed/estimated at synthesis or refresh time.
+enum TrendDirection {
+  rising
+  steady
+  fading
+}
+
+// Where a saved item points to — a single Story or a whole Thread.
+enum SavedItemType {
+  story
+  thread
+}
+
+// A durable, ongoing topic. Stories attach to a Thread as it evolves over time.
+// Not every Story belongs to a Thread — only ones judged to be part of a
+// continuing story get one (see lib/threads.ts).
+model Thread {
+  id          String   @id @default(cuid())
+  title       String
+  description String? // short standing summary of what this thread is about
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stories    Story[]
+  entries    ThreadEntry[]
+  savedItems SavedItem[]
+}
+
+// One point-in-time entry in a Thread's timeline. Usually created alongside a
+// Story (dev == that story's snapshot), but can also be a plain timeline note.
+model ThreadEntry {
+  id         String   @id @default(cuid())
+  threadId   String
+  thread     Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  storyId    String?  @unique
+  story      Story?   @relation(fields: [storyId], references: [id], onDelete: SetNull)
+  summary    String // one or two sentences: what changed at this point in the thread
+  occurredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+}
+
+// The underlying, cross-domain tag a Story is filed under (e.g. "AI regulation",
+// "labor shortage") — deliberately abstract, not a surface category like "Tech".
+model Theme {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  stories StoryTheme[]
+}
+
+// Join table for the many-to-many Story <-> Theme relationship.
+model StoryTheme {
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  themeId String
+  theme   Theme  @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, themeId])
+}
+
+// A source article/page scraped in support of a Story's synthesis.
+model Source {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  url       String
+  title     String?
+  createdAt DateTime @default(now())
+}
+
+// The core unit: one layered-narrative writeup of a trending or researched topic.
+model Story {
+  id       String         @id @default(cuid())
+  headline String
+  slug     String         @unique
+  whyNow   String // one-line "why now" shown on the feed card
+  trend    TrendDirection @default(steady)
+
+  // Layered narrative sections (see synthesis pipeline prompt shape)
+  whatHappened  String
+  background    String
+  whoInvolved   String // rendered plain text list of key people/orgs
+  whatsNext     String
+  talkingPoints String // JSON-encoded string[] — 2-3 sharp talking points
+
+  origin    String   @default("manual") // "trend" | "search" | "manual" — how the story entered the system
+  status    String   @default("active") // "active" | "archived"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  threadId String?
+  thread   Thread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+
+  themes      StoryTheme[]
+  sources     Source[]
+  threadEntry ThreadEntry?
+  savedItems  SavedItem[]
+}
+
+// A user's saved Story or Thread, with a free-text personal note attached.
+// v1 is single-user, so there's no userId — this is the whole "knowledge base".
+model SavedItem {
+  id        String        @id @default(cuid())
+  type      SavedItemType
+  storyId   String?       @unique
+  story     Story?        @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  threadId  String?       @unique
+  thread    Thread?       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  notes     String        @default("")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
