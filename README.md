@@ -11,28 +11,42 @@ instance.
 ## Stack
 
 - Next.js (App Router) + TypeScript + Tailwind v4
-- SQLite via Prisma (single file, zero external services)
+- Postgres via Prisma, using the `@prisma/adapter-pg` driver adapter (any
+  Postgres works — Prisma Postgres, Vercel Postgres, Neon, Supabase, or
+  your own). SQLite doesn't survive Vercel's ephemeral/read-only serverless
+  filesystem, so this needs a real hosted database even for solo use.
 - Claude API (`@anthropic-ai/sdk`) for narrative synthesis, via structured
   outputs (`output_config.format` + Zod schema) — no fragile JSON parsing
 - Firecrawl for source-article scraping and trend-candidate discovery
 
 ## Setup
 
-```bash
-npm install
-cp .env.example .env   # fill in ANTHROPIC_API_KEY / FIRECRAWL_API_KEY / CRON_SECRET
-npx prisma migrate dev # first run only — creates prisma/dev.db
-npx prisma db seed     # optional — loads 6 mock stories so the UI has something to show
-npm run dev
-```
+1. Get a Postgres database. Easiest path: in your Vercel project → **Storage**
+   → **Connect Database** → **Prisma Postgres** (or Neon/Supabase/Vercel
+   Postgres — any of them work identically here). Copy the connection
+   string.
+2.
+   ```bash
+   npm install
+   cp .env.example .env
+   # fill in DATABASE_URL (from step 1), ANTHROPIC_API_KEY, FIRECRAWL_API_KEY, CRON_SECRET
+   npx prisma migrate deploy   # creates all tables
+   npx prisma db seed          # optional — loads 6 mock stories so the UI has something to show
+   npm run dev
+   ```
 
 Open http://localhost:3000.
+
+On Vercel, set the same env vars as project Environment Variables — the
+build script (`prisma migrate deploy && next build`) applies any pending
+migrations automatically on every deploy, so you don't need a separate
+migration step in CI.
 
 ### Environment variables
 
 | Variable | Required for | Notes |
 |---|---|---|
-| `DATABASE_URL` | Everything | Defaults to `file:./prisma/dev.db`, already set in `.env.example` |
+| `DATABASE_URL` | Everything | A Postgres connection string. Use the **direct** (non-pooled) connection string — `@prisma/adapter-pg` manages its own pool |
 | `ANTHROPIC_API_KEY` | Synthesis (Explore, refresh job) | Get one at console.anthropic.com. Without it, `/explore`'s "Research this" and the refresh job will fail — browsing the feed/saved/themes still works against seeded/existing data |
 | `FIRECRAWL_API_KEY` | Real source scraping | Without it, synthesis still runs but with no sources — Claude writes from general knowledge and is prompted to hedge accordingly. Get one at firecrawl.dev |
 | `CRON_SECRET` | The refresh endpoint | Shared secret required to call `/api/cron/refresh` |

@@ -1,10 +1,10 @@
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { slugify, uniqueSlug } from "../src/lib/slug";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
 const db = new PrismaClient({ adapter });
 
 interface SeedStory {
@@ -265,5 +265,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    // better-sqlite3 connections close synchronously; nothing to await.
+    await pool.end();
   });
