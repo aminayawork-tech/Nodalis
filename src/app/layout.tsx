@@ -7,6 +7,10 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   style: ["normal", "italic"],
+  // Pinned to fixed static weights rather than the full variable range —
+  // interpolating arbitrary weights on Fraunces' variable font (esp. in
+  // italic) can render with distorted, overly "wonky" letterforms.
+  weight: ["400", "500", "600", "700"],
 });
 
 const sourceSans = Source_Sans_3({

@@ -89,7 +89,7 @@ export default async function StoryPage({
         </Section>
 
         <div className="rounded-xl border border-accent/30 bg-accent-soft p-5">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-accent">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-accent">
             Talking points
           </h2>
           <ul className="mt-3 flex flex-col gap-3">
@@ -128,7 +128,7 @@ export default async function StoryPage({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+      <h2 className="text-xs font-bold uppercase tracking-wide text-ink-muted">
         {title}
       </h2>
       <div className="mt-2 text-[15px] leading-relaxed text-ink">{children}</div>

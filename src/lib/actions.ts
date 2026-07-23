@@ -39,6 +39,13 @@ export async function updateNotes(savedItemId: string, notes: string) {
   revalidatePath("/saved");
 }
 
+// Permanently removes a story (and its themes/sources/saved entry via
+// cascade). Surfaced through the 3-dot menu on story cards.
+export async function deleteStory(storyId: string) {
+  await db.story.delete({ where: { id: storyId } });
+  revalidatePath("/", "layout");
+}
+
 // Explore "go deep on demand": always runs the full pipeline live (Firecrawl
 // + Claude) for whatever the user typed, then lands on the fresh story. The
 // Explore page itself surfaces existing matches first (via a plain search)
