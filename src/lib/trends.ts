@@ -101,7 +101,10 @@ export async function getKeywordTrend(query: string): Promise<KeywordTrend | nul
   const trimmed = query.trim();
   if (!key || !trimmed) return null;
 
-  const url = `${SERPAPI_BASE}?engine=google_trends&q=${encodeURIComponent(trimmed)}&data_type=TIMESERIES&geo=US&hl=en&api_key=${key}`;
+  // Explicit `date` window — without it Google Trends defaults to a 5-year
+  // lookback, which buries the current, up-to-date signal under years of
+  // historical noise. "today 12-m" keeps every point recent.
+  const url = `${SERPAPI_BASE}?engine=google_trends&q=${encodeURIComponent(trimmed)}&data_type=TIMESERIES&date=today%2012-m&geo=US&hl=en&api_key=${key}`;
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) {
     console.error(`SerpApi google_trends failed (${res.status}): ${await res.text()}`);
