@@ -173,16 +173,16 @@ export function StoryChat({ storyId, headline }: { storyId: string; headline: st
               onPointerMove={onResizePointerMove}
               onPointerUp={onResizePointerUp}
               title="Drag to resize"
-              className="absolute left-0 top-0 z-10 h-5 w-5 cursor-nwse-resize touch-none rounded-tl-xl"
+              className="absolute left-1 top-1 z-10 flex h-4 w-4 cursor-nwse-resize touch-none items-center justify-center rounded"
             >
               <svg
-                viewBox="0 0 16 16"
+                viewBox="0 0 12 12"
                 fill="none"
-                className="absolute left-1 top-1 h-2.5 w-2.5 text-ink-muted"
+                className="h-3 w-3 text-ink-muted"
                 aria-hidden="true"
               >
                 <path
-                  d="M14 2 2 14M14 8 8 14"
+                  d="M10 4 4 10M10 8 8 10"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
@@ -191,7 +191,7 @@ export function StoryChat({ storyId, headline }: { storyId: string; headline: st
             </div>
           )}
 
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between border-b border-border py-3 pl-7 pr-4">
             <div className="min-w-0">
               <div className="text-xs uppercase tracking-wide text-ink-muted">Ask about</div>
               <div className="truncate text-sm text-ink">{headline}</div>

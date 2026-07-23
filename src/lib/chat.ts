@@ -38,10 +38,11 @@ export async function answerStoryQuestion(
 
   const message = await anthropic.messages.create({
     model: SYNTHESIS_MODEL,
-    max_tokens: 1024,
+    max_tokens: 1536,
     thinking: { type: "adaptive" },
     output_config: { effort: "low" },
-    system: `You're helping a user go deeper on a story they've already read in Nodalis, their personal research tool. Answer follow-up questions using the story context below. Stay grounded in it — if a question asks for something outside this context (e.g. the very latest update, or a tangent the story doesn't cover), say so plainly rather than inventing specifics; you can add relevant general knowledge with that caveat. Keep answers conversational and concise — a few sentences, not another full report. Reply in plain prose only: no markdown, no bold/italic asterisks, no headers, no bullet lists.\n\n${context}`,
+    tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }],
+    system: `You're helping a user go deeper on a story they've already read in Nodalis, their personal research tool. Answer follow-up questions using the story context below. Stay grounded in it for what it already covers. For anything current — the latest status, recent developments, or a fact the story doesn't cover — use web search rather than answering from memory or guessing; the user wants up-to-date answers, not a "check elsewhere" deflection. Keep answers conversational and concise — a few sentences, not another full report. Reply in plain prose only: no markdown, no bold/italic asterisks, no headers, no bullet lists.\n\n${context}`,
     messages: [
       ...history.map((m) => ({ role: m.role, content: m.content })),
       { role: "user" as const, content: question },
