@@ -41,15 +41,21 @@ export async function answerStoryQuestion(
     max_tokens: 1024,
     thinking: { type: "adaptive" },
     output_config: { effort: "low" },
-    system: `You're helping a user go deeper on a story they've already read in Nodalis, their personal research tool. Answer follow-up questions using the story context below. Stay grounded in it — if a question asks for something outside this context (e.g. the very latest update, or a tangent the story doesn't cover), say so plainly rather than inventing specifics; you can add relevant general knowledge with that caveat. Keep answers conversational and concise — a few sentences, not another full report.\n\n${context}`,
+    system: `You're helping a user go deeper on a story they've already read in Nodalis, their personal research tool. Answer follow-up questions using the story context below. Stay grounded in it — if a question asks for something outside this context (e.g. the very latest update, or a tangent the story doesn't cover), say so plainly rather than inventing specifics; you can add relevant general knowledge with that caveat. Keep answers conversational and concise — a few sentences, not another full report. Reply in plain prose only: no markdown, no bold/italic asterisks, no headers, no bullet lists.\n\n${context}`,
     messages: [
       ...history.map((m) => ({ role: m.role, content: m.content })),
       { role: "user" as const, content: question },
     ],
   });
 
-  return message.content
+  const text = message.content
     .map((block) => (block.type === "text" ? block.text : ""))
     .join("")
     .trim();
+
+  // Safety net in case the model still slips in markdown emphasis/headers.
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "");
 }
