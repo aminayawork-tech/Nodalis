@@ -45,7 +45,12 @@ export async function getLiveTrends(limit = 12): Promise<TrendingSearch[]> {
   const key = serpApiKey();
   if (!key) return [];
 
-  const url = `${SERPAPI_BASE}?engine=google_trends_trending_now&geo=US&hl=en&api_key=${key}`;
+  // no_cache=true bypasses SerpApi's own server-side cache — without it,
+  // repeat calls for this same (parameter-less) query can get back a
+  // response SerpApi already had cached, independent of our own 5-minute
+  // revalidation window. Our `next.revalidate` still caps how often we
+  // actually call SerpApi, so this doesn't increase request volume.
+  const url = `${SERPAPI_BASE}?engine=google_trends_trending_now&geo=US&hl=en&no_cache=true&api_key=${key}`;
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) {
     console.error(`SerpApi trending_now failed (${res.status}): ${await res.text()}`);
@@ -104,7 +109,7 @@ export async function getKeywordTrend(query: string): Promise<KeywordTrend | nul
   // Explicit `date` window — without it Google Trends defaults to a 5-year
   // lookback, which buries the current, up-to-date signal under years of
   // historical noise. "today 12-m" keeps every point recent.
-  const url = `${SERPAPI_BASE}?engine=google_trends&q=${encodeURIComponent(trimmed)}&data_type=TIMESERIES&date=today%2012-m&geo=US&hl=en&api_key=${key}`;
+  const url = `${SERPAPI_BASE}?engine=google_trends&q=${encodeURIComponent(trimmed)}&data_type=TIMESERIES&date=today%2012-m&geo=US&hl=en&no_cache=true&api_key=${key}`;
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) {
     console.error(`SerpApi google_trends failed (${res.status}): ${await res.text()}`);
