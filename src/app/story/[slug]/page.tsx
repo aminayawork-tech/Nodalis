@@ -7,6 +7,7 @@ import { ThemeChip } from "@/components/ThemeChip";
 import { SaveButton } from "@/components/SaveButton";
 import { NotesEditor } from "@/components/NotesEditor";
 import { StoryCard } from "@/components/StoryCard";
+import { StoryChat } from "@/components/StoryChat";
 
 export default async function StoryPage({
   params,
@@ -118,6 +119,8 @@ export default async function StoryPage({
           </div>
         </div>
       )}
+
+      <StoryChat storyId={story.id} headline={story.headline} />
     </div>
   );
 }

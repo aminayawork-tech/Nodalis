@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "./db";
 import { ingestTopic } from "./ingest";
+import { answerStoryQuestion, type ChatMessage } from "./chat";
 
 export async function saveStory(storyId: string) {
   await db.savedItem.upsert({
@@ -49,4 +50,33 @@ export async function exploreTopic(topic: string) {
   const story = await ingestTopic(trimmed, "search");
   revalidatePath("/");
   redirect(`/story/${story.slug}`);
+}
+
+// Follow-up chat on a story's detail page — grounded in that story's already
+// -synthesized fields, not a fresh scrape, so it stays cheap and fast.
+export async function askAboutStory(
+  storyId: string,
+  history: ChatMessage[],
+  question: string
+): Promise<string> {
+  const story = await db.story.findUnique({
+    where: { id: storyId },
+    include: { themes: { include: { theme: true } } },
+  });
+  if (!story) throw new Error("Story not found");
+
+  return answerStoryQuestion(
+    {
+      headline: story.headline,
+      whyNow: story.whyNow,
+      whatHappened: story.whatHappened,
+      background: story.background,
+      whoInvolved: story.whoInvolved,
+      whatsNext: story.whatsNext,
+      talkingPoints: story.talkingPoints,
+      themes: story.themes.map((t) => t.theme.name),
+    },
+    history,
+    question
+  );
 }
