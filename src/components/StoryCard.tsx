@@ -7,6 +7,16 @@ import { ThemeChip } from "./ThemeChip";
 import { deleteStory } from "@/lib/actions";
 import type { StoryCard as StoryCardData } from "@/lib/queries";
 
+function DotsIcon() {
+  return (
+    <svg viewBox="0 0 4 16" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+      <circle cx="2" cy="2" r="1.6" />
+      <circle cx="2" cy="8" r="1.6" />
+      <circle cx="2" cy="14" r="1.6" />
+    </svg>
+  );
+}
+
 export function StoryCard({ story }: { story: StoryCardData }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -25,7 +35,7 @@ export function StoryCard({ story }: { story: StoryCardData }) {
   }
 
   return (
-    <div className="group relative rounded-xl border border-border bg-card p-5 transition-colors hover:border-accent">
+    <div className="relative rounded-xl border border-border bg-card p-5 transition-colors hover:border-accent">
       <Link href={`/story/${story.slug}`} className="block">
         <div className="flex items-center justify-between gap-3 pr-6">
           {primaryTheme ? (
@@ -53,9 +63,9 @@ export function StoryCard({ story }: { story: StoryCardData }) {
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label="Story options"
-          className="rounded p-1 text-ink-muted opacity-0 transition-opacity hover:bg-accent-soft hover:text-accent group-hover:opacity-100 focus:opacity-100"
+          className="rounded p-1.5 text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
         >
-          ⋯
+          <DotsIcon />
         </button>
         {open && (
           <div className="absolute right-0 top-7 z-10 w-40 rounded-lg border border-border bg-card py-1 shadow-sm">
