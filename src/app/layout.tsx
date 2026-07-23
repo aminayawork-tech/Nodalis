@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { NavHeader } from "@/components/NavHeader";
+import { MobileNav } from "@/components/MobileNav";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -36,7 +37,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <NavHeader />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+        <MobileNav />
       </body>
     </html>
   );

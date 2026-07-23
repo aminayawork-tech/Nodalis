@@ -165,7 +165,7 @@ export function StoryChat({ storyId, headline }: { storyId: string; headline: st
       {open && (
         <div
           style={{ width: size.width, height: size.height }}
-          className="fixed bottom-20 right-6 z-20 flex max-w-[calc(100vw-1.5rem)] flex-col rounded-xl border border-border bg-card shadow-lg"
+          className="fixed bottom-36 right-6 z-20 flex max-w-[calc(100vw-1.5rem)] flex-col rounded-xl border border-border bg-card shadow-lg sm:bottom-20"
         >
           {!maximized && (
             <div
@@ -270,7 +270,7 @@ export function StoryChat({ storyId, headline }: { storyId: string; headline: st
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-paper shadow-lg transition-transform hover:scale-105"
+        className="fixed bottom-20 right-6 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-paper shadow-lg transition-transform hover:scale-105 sm:bottom-6"
         aria-label={open ? "Close chat" : "Ask a follow-up"}
       >
         {open ? "✕" : <ChatIcon />}
