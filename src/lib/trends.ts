@@ -74,6 +74,74 @@ export async function getLiveTrends(limit = 12): Promise<TrendingSearch[]> {
     }));
 }
 
+export interface KeywordTrendPoint {
+  date: string;
+  value: number;
+}
+
+export interface KeywordTrend {
+  query: string;
+  points: KeywordTrendPoint[];
+  currentInterest: number;
+  changePercent: number;
+  direction: "rising" | "steady" | "fading";
+}
+
+interface RawTimelinePoint {
+  date?: unknown;
+  values?: Array<{ extracted_value?: unknown }>;
+}
+
+// On-demand interest-over-time lookup for a single keyword the user typed —
+// a cheap "is this worth researching?" check before committing to the full
+// Firecrawl+Claude pipeline. One SerpApi call per lookup (not cached across
+// keywords like getLiveTrends, since each query is different).
+export async function getKeywordTrend(query: string): Promise<KeywordTrend | null> {
+  const key = serpApiKey();
+  const trimmed = query.trim();
+  if (!key || !trimmed) return null;
+
+  const url = `${SERPAPI_BASE}?engine=google_trends&q=${encodeURIComponent(trimmed)}&data_type=TIMESERIES&geo=US&hl=en&api_key=${key}`;
+  const res = await fetch(url, { next: { revalidate: 300 } });
+  if (!res.ok) {
+    console.error(`SerpApi google_trends failed (${res.status}): ${await res.text()}`);
+    return null;
+  }
+
+  const json = await res.json();
+  const raw: unknown[] = json?.interest_over_time?.timeline_data ?? [];
+
+  const points = raw
+    .map((r) => r as RawTimelinePoint)
+    .map((r) => ({
+      date: typeof r.date === "string" ? r.date : "",
+      value: Number(r.values?.[0]?.extracted_value) || 0,
+    }))
+    .filter((p) => p.date);
+
+  if (points.length === 0) return null;
+
+  const mid = Math.floor(points.length / 2) || 1;
+  const firstHalf = points.slice(0, mid);
+  const secondHalf = points.slice(mid).length > 0 ? points.slice(mid) : firstHalf;
+  const avg = (arr: KeywordTrendPoint[]) =>
+    arr.reduce((sum, p) => sum + p.value, 0) / arr.length;
+  const firstAvg = avg(firstHalf);
+  const secondAvg = avg(secondHalf);
+  const changePercent = firstAvg > 0 ? Math.round(((secondAvg - firstAvg) / firstAvg) * 100) : 0;
+
+  const direction: KeywordTrend["direction"] =
+    changePercent > 15 ? "rising" : changePercent < -15 ? "fading" : "steady";
+
+  return {
+    query: trimmed,
+    points,
+    currentInterest: points[points.length - 1].value,
+    changePercent,
+    direction,
+  };
+}
+
 const DISCOVERY_QUERIES = [
   "trending news today",
   "biggest news story right now",

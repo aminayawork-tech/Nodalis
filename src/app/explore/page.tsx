@@ -2,6 +2,7 @@ import { searchStories } from "@/lib/queries";
 import { StoryCard } from "@/components/StoryCard";
 import { ExploreBar } from "@/components/ExploreBar";
 import { TrendingNow } from "@/components/TrendingNow";
+import { KeywordTrendCheck } from "@/components/KeywordTrendCheck";
 
 export default async function ExplorePage({
   searchParams,
@@ -21,6 +22,10 @@ export default async function ExplorePage({
 
       <div className="mt-6 max-w-2xl">
         <ExploreBar initialQuery={q} />
+      </div>
+
+      <div className="mt-6 max-w-2xl">
+        <KeywordTrendCheck />
       </div>
 
       {!q && (

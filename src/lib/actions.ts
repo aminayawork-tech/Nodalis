@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "./db";
 import { ingestTopic } from "./ingest";
 import { answerStoryQuestion, type ChatMessage } from "./chat";
+import { getKeywordTrend, type KeywordTrend } from "./trends";
 
 export async function saveStory(storyId: string) {
   await db.savedItem.upsert({
@@ -44,6 +45,12 @@ export async function updateNotes(savedItemId: string, notes: string) {
 export async function deleteStory(storyId: string) {
   await db.story.delete({ where: { id: storyId } });
   revalidatePath("/", "layout");
+}
+
+// Quick "is this worth researching?" trend lookup for any keyword — cheap
+// and fast compared to exploreTopic's full pipeline below.
+export async function checkKeywordTrend(query: string): Promise<KeywordTrend | null> {
+  return getKeywordTrend(query);
 }
 
 // Explore "go deep on demand": always runs the full pipeline live (Firecrawl
