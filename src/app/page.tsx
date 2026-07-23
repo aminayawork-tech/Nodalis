@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getFeedStories } from "@/lib/queries";
 import { StoryCard } from "@/components/StoryCard";
+import { TrendingNow } from "@/components/TrendingNow";
 
 export default async function FeedPage() {
   const stories = await getFeedStories();
@@ -16,6 +17,8 @@ export default async function FeedPage() {
           underneath them.
         </p>
       </div>
+
+      <TrendingNow />
 
       {stories.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-8 text-center text-ink-muted">
