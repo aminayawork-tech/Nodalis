@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getThemeBySlug, getStoriesByTheme } from "@/lib/queries";
 import { StoryCard } from "@/components/StoryCard";
 
@@ -8,6 +9,11 @@ export default async function ThemePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // See story/[slug]/page.tsx — dynamic params alone don't force fresh
+  // per-request rendering, so without this a theme's story list can freeze
+  // at whatever it looked like on first visit.
+  await connection();
+
   const { slug } = await params;
   const theme = await getThemeBySlug(slug);
   if (!theme) notFound();

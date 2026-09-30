@@ -1,7 +1,14 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getAllThemes } from "@/lib/queries";
 
 export default async function ThemesPage() {
+  // See page.tsx (Feed) — no Request-time API here, so without this the
+  // theme list (including per-theme story counts) can get frozen at
+  // whatever it looked like the last time a request happened to trigger a
+  // background regeneration.
+  await connection();
+
   const themes = await getAllThemes();
 
   return (

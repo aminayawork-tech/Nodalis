@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getStoryBySlug, getRelatedStories } from "@/lib/queries";
 import { parseStringArray, relativeTime } from "@/lib/format";
 import { TrendBadge } from "@/components/TrendBadge";
@@ -14,6 +15,12 @@ export default async function StoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // A dynamic route param on its own isn't a Request-time API, so without
+  // this the first visit to a given slug can get cached indefinitely —
+  // meaning a later saved-notes edit, save toggle, or newly-linked related
+  // story here would silently stop showing up.
+  await connection();
+
   const { slug } = await params;
   const story = await getStoryBySlug(slug);
   if (!story) notFound();

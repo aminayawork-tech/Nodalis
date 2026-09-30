@@ -1,9 +1,19 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getFeedStories } from "@/lib/queries";
 import { StoryCard } from "@/components/StoryCard";
 import { TrendingNow } from "@/components/TrendingNow";
 
 export default async function FeedPage() {
+  // Nothing on this page reads a Request-time API (cookies/headers/
+  // searchParams), so Next would otherwise treat it as a static page that
+  // only regenerates when a request happens to land after its cache
+  // expires — on a low-traffic single-user tool that can go untriggered
+  // for a long time, leaving both the story list and Trending Now frozen.
+  // `connection()` forces this page to render fresh on every request
+  // without touching the SerpApi fetch's own 5-minute cache below.
+  await connection();
+
   const stories = await getFeedStories();
 
   return (

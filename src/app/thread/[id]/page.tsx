@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getThread } from "@/lib/queries";
 import { formatDate } from "@/lib/format";
 import { SaveButton } from "@/components/SaveButton";
@@ -10,6 +11,10 @@ export default async function ThreadPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // See story/[slug]/page.tsx — same reasoning: dynamic params alone don't
+  // force fresh per-request rendering.
+  await connection();
+
   const { id } = await params;
   const thread = await getThread(id);
   if (!thread) notFound();

@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getSavedItems } from "@/lib/queries";
 import { ThemeChip } from "@/components/ThemeChip";
 import { NotesEditor } from "@/components/NotesEditor";
 import { relativeTime } from "@/lib/format";
 
 export default async function SavedPage() {
+  // No Request-time API on this page, so without this it can get statically
+  // prerendered and frozen — meaning a save/unsave or a notes edit might not
+  // show up here until some later request happens to trigger a background
+  // regeneration. This page is exactly the personal state that must always
+  // be current, so force it to render fresh every request.
+  await connection();
+
   const items = await getSavedItems();
 
   return (
