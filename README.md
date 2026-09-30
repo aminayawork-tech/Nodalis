@@ -11,20 +11,27 @@ instance.
 ## Stack
 
 - Next.js (App Router) + TypeScript + Tailwind v4
-- Postgres via Prisma, using the `@prisma/adapter-pg` driver adapter (any
-  Postgres works — Prisma Postgres, Vercel Postgres, Neon, Supabase, or
-  your own). SQLite doesn't survive Vercel's ephemeral/read-only serverless
-  filesystem, so this needs a real hosted database even for solo use.
+- Postgres via Prisma, using the `@prisma/adapter-pg` driver adapter. Run on
+  **Vercel Postgres** (Neon-backed) — provisioned right inside the Vercel
+  dashboard, so there's no separate account to manage and no risk of the
+  database silently pausing/disappearing from inactivity the way a
+  free-tier account on a separate provider can. SQLite doesn't survive
+  Vercel's ephemeral/read-only serverless filesystem, so this needs a real
+  hosted database even for solo use.
 - Claude API (`@anthropic-ai/sdk`) for narrative synthesis, via structured
   outputs (`output_config.format` + Zod schema) — no fragile JSON parsing
 - Firecrawl for source-article scraping and trend-candidate discovery
 
 ## Setup
 
-1. Get a Postgres database. Easiest path: in your Vercel project → **Storage**
-   → **Connect Database** → **Prisma Postgres** (or Neon/Supabase/Vercel
-   Postgres — any of them work identically here). Copy the connection
-   string.
+1. Get a Postgres database: in your Vercel project → **Storage** →
+   **Create Database** → **Postgres** (this is Vercel's native, Neon-backed
+   offering). Connect it to the project — Vercel injects a connection
+   string as an environment variable automatically, but it's usually the
+   **pooled** one; grab the **direct/non-pooled** connection string instead
+   (shown alongside it in the same Storage/Connect panel) and set that as
+   `DATABASE_URL` — see the table below for why. Copy that same string for
+   local dev too.
 2.
    ```bash
    npm install
@@ -46,7 +53,7 @@ migration step in CI.
 
 | Variable | Required for | Notes |
 |---|---|---|
-| `DATABASE_URL` | Everything | A Postgres connection string. On Supabase specifically, use the **Transaction pooler** string (port 6543) when deploying to Vercel — Supabase's direct connection is IPv6-only, which Vercel's serverless functions can't reach. Other providers' direct connection strings work fine. |
+| `DATABASE_URL` | Everything | A Postgres connection string. Use Vercel Postgres's **direct** (non-pooled) connection string, not the pooled one — this app is single-user/low-traffic, so there's no need for a connection pooler, and using the direct string for everything avoids the pooled-vs-migrations locking issues that pooler modes can cause (unlike Supabase, Vercel Postgres's direct connection isn't IPv6-only, so it reaches Vercel's serverless functions fine). |
 | `ANTHROPIC_API_KEY` | Synthesis (Explore, refresh job) | Get one at console.anthropic.com. Without it, `/explore`'s "Research this" and the refresh job will fail — browsing the feed/saved/themes still works against seeded/existing data |
 | `FIRECRAWL_API_KEY` | Real source scraping | Without it, synthesis still runs but with no sources — Claude writes from general knowledge and is prompted to hedge accordingly. Get one at firecrawl.dev |
 | `CRON_SECRET` | The refresh endpoint | Shared secret required to call `/api/cron/refresh` |
